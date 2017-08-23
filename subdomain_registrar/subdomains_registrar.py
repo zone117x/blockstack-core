@@ -229,6 +229,21 @@ def queue_name_for_registration(subdomain, domain_name):
     return {'status' : 'true',
             'message' : 'Subdomain registration queued.'}
 
+def queue_name_for_update(subdomain, domain_name):
+    current = get_subdomain(subdomain.subdomain_name, domain_name)
+    if not current:
+        return (404, {'error' :
+                      'Could not find information about subdomain {}, will not issue update'.format(
+                          subdomain.subdomain_name)})
+    if not subdomain.verify_signature(current['address']):
+        return (403, {'error' :
+                      'Signature could not be verified for subdomain {}, owned by {}'.format(
+                          subdomain.subdomain_name, current['address'])})
+    q =  SubdomainOpsQueue(domain_name, config.get_subdomain_registrar_db_path())
+    q.add_subdomain_to_queue(subdomain)
+    return {'status' : 'true',
+            'message' : 'Subdomain registration queued.'}
+
 def parse_subdomain_request(domain_name, input_str):
     schema = {
         'type' : 'object',
@@ -264,6 +279,82 @@ def parse_subdomain_request(domain_name, input_str):
         domain_name,
         request['name'], owner_entry,
         n=0, zonefile_str = zonefile_str)
+
+def parse_subdomain_update_request(domain_name, input_str):
+    schema = {
+        'type' : 'object',
+        'properties' : {
+            'name' : {
+                'type': 'string',
+                'pattern': config.SUBDOMAIN_NAME_PATTERN
+            },
+            'owner_address' : {
+                'type': 'string',
+                'pattern': schemas.OP_ADDRESS_PATTERN
+            },
+            'zonefile' : {
+                'type' : 'string',
+                'maxLength' : blockstack_constants.RPC_MAX_ZONEFILE_LEN
+            },
+            'update_sequence_number' : {
+                'type' : 'int',
+            },
+            'signature' : {
+                'type' : 'string',
+                'pattern': schemas.OP_BASE64_PATTERN
+            }
+        },
+        'required':[
+            'name', 'owner_address', 'zonefile',
+            'update_sequence_number', 'signature'
+        ],
+        'additionalProperties' : True
+    }
+    request = json.loads(input_str)
+    jsonschema.validate(request, schema)
+
+    zonefile_str = str(request['zonefile'])
+    if zonefile_str is None:
+        raise Exception("Request lacked either a zonefile_str or an uris entry")
+
+    owner_entry = str(request['owner_address'])
+
+    return subdomains.Subdomain(
+        domain_name,
+        request['name'], owner_entry,
+        n=request['update_sequence_number'],
+        zonefile_str = zonefile_str,
+        signature = request['signature'])
+
+def handle_registration_request(domain_name, input_str):
+    try:
+        subdomain = parse_subdomain_request(domain_name, input_str)
+    except Exception as e:
+        log.exception(e)
+        return (401, {"error" : "Problem parsing request"})
+
+    try:
+        queued_resp = queue_name_for_registration(subdomain, domain_name)
+    except subdomains.SubdomainAlreadyExists as e:
+        log.exception(e)
+        return (403, {"error" : "Subdomain already exists on this domain"})
+
+    if "error" in queued_resp:
+        return (500, queued_resp)
+    return (202, queued_resp)
+
+def handle_update_request(domain_name, input_str):
+    try:
+        subdomain = parse_subdomain_update_request(domain_name, input_str)
+    except Exception as e:
+        log.exception(e)
+        return (401, {"error" : "Problem parsing request"})
+
+    queued_resp = queue_name_for_update(subdomain, domain_name)
+
+    if "error" in queued_resp:
+        return (500, queued_resp)
+    return (202, queued_resp)
 
 def run_registrar(domain_name):
     """
@@ -409,21 +500,9 @@ class SubdomainRegistrarRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         length = int(self.headers.getheader('content-length'))
         if length > 1024 * 1024:
             return self.send_message(403, json.dumps({"error" : "Content length too long. Request Denied."}))
-        try:
-            subdomain = parse_subdomain_request(self.server.domain_name, self.rfile.read(length))
-        except Exception as e:
-            log.exception(e)
-            return self.send_message(401, json.dumps({"error" : "Problem parsing request"}))
 
-        try:
-            queued_resp = queue_name_for_registration(subdomain, self.server.domain_name)
-        except subdomains.SubdomainAlreadyExists as e:
-            log.exception(e)
-            return self.send_message(403, json.dumps({"error" : "Subdomain already exists on this domain"}))
-
-        if "error" in queued_resp:
-            return self.send_message(500, json.dumps(queued_resp))
-        return self.send_message(202, json.dumps(queued_resp))
+        http_status, resp_obj = handle_registration_request(self.server.domain_name, self.rfile.read(length))
+        return self.send_message(http_status, json.dumps(resp_obj))
 
 class SubdomainLock(object):
     @staticmethod
@@ -501,6 +580,14 @@ def get_zonefile(domain):
 def does_subdomain_exist(subdomain, domain):
     resp = rest_to_api("/v1/users/{}.{}/".format(subdomain, domain))
     return (resp.status_code == 200)
+
+def get_subdomain(subdomain, domain):
+    resp = rest_to_api("/v1/users/{}.{}/".format(subdomain, domain))
+    if resp.status_code == 200:
+        jsoned = resp.json()
+        return jsoned
+    else:
+        return False
 
 def rest_to_api(target, data=None, call = requests.get):
     api_endpoint, authentication = config.get_core_api_endpoint()
