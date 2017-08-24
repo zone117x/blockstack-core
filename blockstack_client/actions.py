@@ -1066,6 +1066,7 @@ def cli_whois(args, config_path=CONFIG_PATH):
                 'address' : subdomain_obj.address,
                 'blockchain' : 'bitcoin',
                 'last_txid' : subdomain_obj.last_txid,
+                'subdomain_sequence_number' : subdomain_obj.n
             }
             return ret
         return {'error': error}

@@ -105,21 +105,29 @@ class SubdomainOpsQueue(object):
             ",".join("?" * len(subds)))
         self._execute(sql, [txid] + list(subds))
 
-    def get_subdomain_status(self, subdomain):
+    def clear_error_submission(self, subdomain_name):
+        status = self.get_subdomain_status(subdomain_name)
+        if not status or "error" not in status:
+            return
+        sql = """UPDATE {} SET subdomain_name = subdomain_name || received_at
+        WHERE subdomain_name = ?;""".format(self.queue_table)
+        self._execute(sql, (subdomain_name,))
+
+    def get_subdomain_status(self, subdomain_name):
         sql = """SELECT in_tx FROM {} WHERE subdomain_name = ?""".format(
             self.queue_table)
-        out = self._execute(sql, (subdomain,))
+        out = self._execute(sql, (subdomain_name,))
         try:
             status = out.fetchone()[0]
         except Exception as e:
-            log.warn("Subdomain {} not found in registrar".format(subdomain))
+            log.warn("Subdomain {} not found in registrar".format(subdomain_name))
             return None
         if not status:
             return {"status" : "Subdomain is queued for update and should be announced within the next few blocks."}
         if status.startswith("ERR"):
             return {"error" :
                     "There was a problem propagating your subdomain registration. The" +
-                    " server experience an {} error while trying to issue the update.".format(status)}
+                    " server experienced an {} error while trying to issue the update.".format(status)}
         return {"status" :
                 ("Your subdomain was registered in transaction {} -- it should propagate" +
                  " on the network once it has 6 confirmations.").format(status)}
@@ -225,6 +233,7 @@ def queue_name_for_registration(subdomain, domain_name):
     if does_subdomain_exist(subdomain.subdomain_name, domain_name):
         raise subdomains.SubdomainAlreadyExists(subdomain.subdomain_name, domain_name)
     q =  SubdomainOpsQueue(domain_name, config.get_subdomain_registrar_db_path())
+    q.clear_error_submission(subdomain.subdomain_name)
     q.add_subdomain_to_queue(subdomain)
     return {'status' : 'true',
             'message' : 'Subdomain registration queued.'}
@@ -239,10 +248,22 @@ def queue_name_for_update(subdomain, domain_name):
         return (403, {'error' :
                       'Signature could not be verified for subdomain {}, owned by {}'.format(
                           subdomain.subdomain_name, current['address'])})
+    try:
+        current_seq_number = current['subdomain_sequence_number']
+    except:
+        return (500, {'error' :
+                      'Subdomain registrar communicating with out-of-date core server. Please upgrade.'})
+    if subdomain.n != current_seq_number + 1:
+        return (403, {'error' :
+                      ('Submitted updated sequence number {} does not correctly ' +
+                       'increment from the current sequence number {}').format(
+                           subdomain.n, current_seq_number)})
+
     q =  SubdomainOpsQueue(domain_name, config.get_subdomain_registrar_db_path())
-    q.add_subdomain_to_queue(subdomain)
+    q.clear_error_submission(subdomain.subdomain_name)
+    q.add_subdomain_update_to_queue(subdomain)
     return {'status' : 'true',
-            'message' : 'Subdomain registration queued.'}
+            'message' : 'Subdomain update queued.'}
 
 def parse_subdomain_request(domain_name, input_str):
     schema = {
