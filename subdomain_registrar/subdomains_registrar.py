@@ -57,6 +57,7 @@ class SubdomainOpsQueue(object):
         received_at INTEGER PRIMARY KEY,
         subdomain TEXT NOT NULL,
         subdomain_name TEXT NOT NULL,
+        op_sequence_number INTEGER NOT NULL,
         in_tx TEXT);
         """.format(self.queue_table)
 
@@ -80,12 +81,14 @@ class SubdomainOpsQueue(object):
         self.conn.commit()
         return r_val
 
-    def _add_subdomain_row(self, jsoned_strings, subdomain_name):
-        sql = """INSERT INTO {} (subdomain, subdomain_name)
-                 SELECT ?, ?
-                 WHERE NOT EXISTS ( SELECT 1 FROM {} WHERE subdomain_name = ? )""".format(
-                     self.queue_table, self.queue_table)
-        inserted = self._execute(sql, (jsoned_strings, subdomain_name, subdomain_name)).rowcount
+    def _add_subdomain_row(self, jsoned_strings, subdomain_name, sequence_number):
+        sql = """INSERT INTO {} (subdomain, subdomain_name, op_sequence_number)
+        SELECT ?, ?, ?
+        WHERE NOT EXISTS
+        ( SELECT 1 FROM {} WHERE subdomain_name = ? AND op_sequence_number >= ? )""".format(
+            self.queue_table, self.queue_table)
+        inserted = self._execute(sql, (jsoned_strings, subdomain_name, sequence_number,
+                                       subdomain_name, sequence_number)).rowcount
         if inserted <= 0:
             raise subdomains.SubdomainAlreadyExists(subdomain_name, self.domain)
 
@@ -114,7 +117,8 @@ class SubdomainOpsQueue(object):
         self._execute(sql, (subdomain_name,))
 
     def get_subdomain_status(self, subdomain_name):
-        sql = """SELECT in_tx FROM {} WHERE subdomain_name = ?""".format(
+        sql = """SELECT in_tx FROM {} WHERE subdomain_name = ?
+        ORDER BY op_sequence_number DESC LIMIT 1""".format(
             self.queue_table)
         out = self._execute(sql, (subdomain_name,))
         try:
@@ -136,7 +140,13 @@ class SubdomainOpsQueue(object):
         name = subdomain.subdomain_name
         packed_dict = subdomain.as_zonefile_entry()
         jsoned = json.dumps(packed_dict)
-        self._add_subdomain_row(jsoned, name)
+        self._add_subdomain_row(jsoned, name, 0)
+
+    def add_subdomain_update_to_queue(self, subdomain):
+        name = subdomain.subdomain_name
+        packed_dict = subdomain.as_zonefile_entry()
+        jsoned = json.dumps(packed_dict)
+        self._add_subdomain_row(jsoned, name, subdomain.n)
 
     def submit_transaction(self):
         queued_rows = list(self._get_queued_rows())
