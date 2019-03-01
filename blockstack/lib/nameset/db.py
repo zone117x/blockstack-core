@@ -2021,7 +2021,7 @@ def namedb_get_name(cur, name, current_block, include_expired=False, include_his
         select_query = "SELECT * FROM name_records WHERE name = ?;"
         args = (name,)
 
-    # log.debug(namedb_format_query(select_query, args))
+    log.debug(namedb_format_query(select_query, args))
 
     name_rows = namedb_query_execute( cur, select_query, args )
     name_row = name_rows.fetchone()

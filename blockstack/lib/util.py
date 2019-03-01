@@ -46,6 +46,24 @@ from .schemas import *
 
 log = virtualchain.get_logger()
 
+def profile(func):
+    def wrap(*args, **kwargs):
+        import cProfile, pstats, StringIO
+        pr = cProfile.Profile()
+        pr.enable()
+        try:
+            result = func(*args, **kwargs)
+            return result
+        finally:
+            pr.disable()
+            s = StringIO.StringIO()
+            sortby = 'cumulative'
+            ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            ps.print_stats()
+            log.debug(s.getvalue())
+
+    return wrap
+
 class GCThread( threading.Thread ):
     """
     Optimistic GC thread

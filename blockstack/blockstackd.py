@@ -61,7 +61,7 @@ from lib.client import BlockstackRPCClient
 from lib.client import ping as blockstack_ping
 from lib.client import OP_HEX_PATTERN, OP_CONSENSUS_HASH_PATTERN, OP_ADDRESS_PATTERN, OP_BASE64_EMPTY_PATTERN
 from lib.config import REINDEX_FREQUENCY, BLOCKSTACK_TEST, default_bitcoind_opts, is_subdomains_enabled
-from lib.util import url_to_host_port, atlas_inventory_to_string, daemonize, make_DID, parse_DID, BoundedThreadingMixIn, GCThread
+from lib.util import profile, url_to_host_port, atlas_inventory_to_string, daemonize, make_DID, parse_DID, BoundedThreadingMixIn, GCThread
 from lib import *
 from lib.audit import find_gpg2, GENESIS_BLOCK_SIGNING_KEYS, genesis_block_audit
 from lib.storage import *
@@ -620,6 +620,7 @@ class BlockstackdRPC(BoundedThreadingMixIn, SimpleXMLRPCServer):
         return name_record
 
 
+    @profile
     def get_name_record(self, name, include_expired=False, include_history=False):
         """
         Get the whois-related info for a name (not a subdomain).
@@ -627,9 +628,10 @@ class BlockstackdRPC(BoundedThreadingMixIn, SimpleXMLRPCServer):
         Return {'status': True, 'record': rec} on success
         Return {'error': ...} on error
         """
+
         if not check_name(name):
-            return {'error': 'invalid name', 'http_status': 400}
-        
+           return {'error': 'invalid name', 'http_status': 400}
+
         name = str(name)
 
         db = get_db_state(self.working_dir)
@@ -647,6 +649,7 @@ class BlockstackdRPC(BoundedThreadingMixIn, SimpleXMLRPCServer):
             # also get the subdomain resolver 
             resolver = get_subdomain_resolver(name)
             name_record['resolver'] = resolver
+
             return {'status': True, 'record': name_record}
 
 
