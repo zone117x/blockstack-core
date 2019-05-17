@@ -7,8 +7,8 @@ jobs:
     steps:
       - checkout
       - run:
-        command: |
-          build-scripts/start-builds.sh
+          command: |
+            build-scripts/start-builds.sh
   build:
     working_directory: ~/blockstack
     docker:
