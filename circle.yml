@@ -1,5 +1,14 @@
 version: 2
 jobs:
+  deploy:
+    working_directory: /build
+    docker:
+      - image: rust:1.34-stretch
+    steps:
+      - checkout
+      - run:
+        command: |
+          build-scripts/start-builds.sh
   build:
     working_directory: ~/blockstack
     docker:
@@ -17,3 +26,17 @@ jobs:
           command: |
             cargo test
 #            cargo kcov && bash <(curl -s https://codecov.io/bash)
+
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: feature/dist-build-scripts
+      - deploy:
+          filters:
+            branches:
+              only: feature/dist-build-scripts
