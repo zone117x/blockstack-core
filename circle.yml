@@ -1,7 +1,7 @@
 version: 2
 jobs:
   deploy:
-    working_directory: /build
+    working_directory: ~/build
     docker:
       - image: rust:1.34-stretch
     steps:
