@@ -7,10 +7,11 @@
 cd "$(dirname "$(dirname "$0")")"
 
 apt-get update
+apt-get install -y clang
 
 git clone https://github.com/tpoechtrager/osxcross.git --depth=1
 
-./osxcross/tools/get_dependencies.sh
+# ./osxcross/tools/get_dependencies.sh
 
 ### Download a pre-bundled osx-sdk. The official method requires downloading and extracting the 
 ### sdk from a 5.2GB Xcode_7.x.dmg file, which requires an Apple ID to download. 

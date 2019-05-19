@@ -10,17 +10,8 @@ jobs:
           command: |
             bash build-scripts/start-builds.sh
       - store_artifacts:
-          path: /build/target/x86_64-apple-darwin/release/blockstack-core
-          destination: macos-x64/blockstack-core
-      - store_artifacts:
-          path: /build/target/x86_64-pc-windows-gnu/release/blockstack-core.exe
-          destination: windows-x64/blockstack-core.exe
-      - store_artifacts:
-          path: /build/target/x86_64-unknown-linux-gnu/release/blockstack-core
-          destination: linux-x64/blockstack-core
-      - store_artifacts:
-          path: /build/target/x86_64-unknown-linux-musl/release/blockstack-core
-          destination: linux-musl-x64/blockstack-core
+          path: /build/dist/
+          destination: dist/
   build:
     working_directory: ~/blockstack
     docker:
