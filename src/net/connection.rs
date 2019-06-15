@@ -32,7 +32,9 @@ use std::sync::mpsc::TryRecvError;
 use std::sync::mpsc::RecvError;
 use std::sync::mpsc::RecvTimeoutError;
 
+#[cfg(not(target_arch = "wasm32"))]
 use mio;
+#[cfg(not(target_arch = "wasm32"))]
 use mio::net as mio_net;
 
 use net::Error as net_error;

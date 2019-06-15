@@ -77,7 +77,9 @@ use util::get_epoch_time_secs;
 use rand::prelude::*;
 use rand::thread_rng;
 
+#[cfg(not(target_arch = "wasm32"))]
 use mio;
+#[cfg(not(target_arch = "wasm32"))]
 use mio::net as mio_net;
 
 /// inter-thread request to send a message from another thread in this program.

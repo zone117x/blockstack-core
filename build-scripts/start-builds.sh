@@ -65,6 +65,14 @@ build_win_x64 () {
   tar czvf "$clarity_tgz" -C "$src_dir/target/x86_64-pc-windows-gnu/release" clarity-cli.exe
 }
 
+### Build and package for wasm
+build_wasm_emscripten () {
+  "$script_path/build-dist-wasm-emscripten.sh"
+}
+
+build_wasm() {
+  "$script_path/build-dist-wasm.sh"
+}
 
 case $DIST_TARGET_FILTER in
   (*[![:blank:]]*)
@@ -73,6 +81,8 @@ case $DIST_TARGET_FILTER in
       linux_musl_x64) build_linux_musl_x64 ;;
       win_x64) build_win_x64 ;;
       mac_x64) build_mac_x64 ;;
+      build_wasm_emscripten) build_wasm_emscripten ;;
+      build_wasm) build_wasm ;;
       *)
         echo "Invalid dist target filter '$DIST_TARGET_FILTER'"
         exit 1
@@ -84,5 +94,6 @@ case $DIST_TARGET_FILTER in
     build_linux_x64
     build_linux_musl_x64
     build_win_x64
+    build_wasm
     ;;
 esac

@@ -50,6 +50,7 @@ use deps::bitcoin::network::serialize::BitcoinHash;
 
 use util::log;
 
+#[cfg(not(target_arch = "wasm32"))]
 use dirs;
 
 pub type BitcoinIndexerPublicKey = <<BitcoinIndexer as BurnchainIndexer>::P as BurnchainBlockParser>::K;
@@ -152,6 +153,7 @@ impl BitcoinIndexerConfig {
            .map_err(|e| btc_error::Io(e))
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn from_file(path: &String) -> Result<BitcoinIndexerConfig, btc_error> {
        let conf_path = PathBuf::from(path);
        if !conf_path.is_file() {

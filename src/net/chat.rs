@@ -64,6 +64,7 @@ use util::log;
 use util::get_epoch_time_secs;
 use util::hash::to_hex;
 
+#[cfg(not(target_arch = "wasm32"))]
 use mio::net as mio_net;
 
 use rusqlite::Transaction;

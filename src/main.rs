@@ -39,6 +39,8 @@ extern crate ripemd160;
 extern crate dirs;
 extern crate regex;
 extern crate byteorder;
+
+#[cfg(not(target_arch = "wasm32"))]
 extern crate mio;
 
 #[macro_use] extern crate serde_derive;

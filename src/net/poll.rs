@@ -35,10 +35,15 @@ use std::io::ErrorKind;
 
 use util::log;
 
+#[cfg(not(target_arch = "wasm32"))]
 use mio;
+#[cfg(not(target_arch = "wasm32"))]
 use mio::net as mio_net;
+#[cfg(not(target_arch = "wasm32"))]
 use mio::Ready;
+#[cfg(not(target_arch = "wasm32"))]
 use mio::Token;
+#[cfg(not(target_arch = "wasm32"))]
 use mio::PollOpt;
 
 use std::net::Shutdown;
