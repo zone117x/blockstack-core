@@ -58,8 +58,9 @@ use util::log;
 use util::get_epoch_time_secs;
 use util::hash::*;
 
-use rand::prelude::*;
-use rand::thread_rng;
+use rand::seq::SliceRandom;
+use rand_os::OsRng;
+use rand_os::rand_core::RngCore;
 
 use rusqlite::Transaction;
 
@@ -70,6 +71,7 @@ pub const NEIGHBOR_REQUEST_TIMEOUT : u64 = 60;
 
 pub const NUM_INITIAL_WALKS : u64 = 10;     // how many unthrottled walks should we do when this peer starts up
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NeighborKey {
     pub fn from_neighbor_address(peer_version: u32, network_id: u32, na: &NeighborAddress) -> NeighborKey {
         NeighborKey {
@@ -81,6 +83,7 @@ impl NeighborKey {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Neighbor {
     pub fn empty(key: &NeighborKey, pubk: &Secp256k1PublicKey, expire_block: u64) -> Neighbor {
         Neighbor {
@@ -151,7 +154,7 @@ impl Neighbor {
     /// So, we can estimate the undirected degree as being a random value between the lower and
     /// upper bound.
     pub fn degree(&self) -> u64 {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
         let res = rng.gen_range(self.in_degree, self.out_degree+1) as u64;
         if res == 0 {
             1
@@ -261,6 +264,7 @@ pub struct NeighborWalk {
     walk_reset_prob: f64            // probability that we do a reset once the minimum duration is met
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NeighborWalk {
     pub fn new(neighbor: &Neighbor) -> NeighborWalk {
         NeighborWalk {
@@ -587,7 +591,7 @@ impl NeighborWalk {
             return Ok(None);
         }
 
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
         slots.shuffle(&mut rng);
         
         for slot in slots {
@@ -843,8 +847,9 @@ impl NeighborWalk {
 
     /// Pick a random neighbor from the frontier, excluding an optional given neighbor 
     fn pick_random_neighbor(frontier: &HashMap<NeighborKey, Neighbor>, exclude: Option<&Neighbor>) -> Option<Neighbor> {
-        let mut rnd = thread_rng();
+        let mut rnd = OsRng;
 
+        use rand::Rng;
         let sample = rnd.gen_range(0, frontier.len());
         let mut count = 0;
 
@@ -886,7 +891,7 @@ impl NeighborWalk {
     /// the current peer's degree to the new peer's degree, but also to the ratio of the new
     /// peer's AS's node count to the current peer's AS's node count.
     pub fn step(&mut self, peerdb_conn: &DBConn) -> Option<Neighbor> {
-        let mut rnd = thread_rng();
+        let mut rnd = OsRng;
 
         // step to a node in cur_neighbor's frontier, per MHRWDA
         let next_neighbor_opt = 
@@ -1072,6 +1077,7 @@ impl NeighborWalk {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl PeerNetwork {
     /// Get some initial fresh random neighbor(s) to crawl
     pub fn get_random_neighbors(&self, num_neighbors: u64, block_height: u64) -> Result<Vec<Neighbor>, net_error> {
@@ -1584,7 +1590,7 @@ impl PeerNetwork {
                     Some(ref walk) => {
                         test_debug!("{:?}: walk has taken {} steps", &local_peer, walk.walk_step_count);
                         if self.walk_count > NUM_INITIAL_WALKS && walk.walk_step_count >= walk.walk_min_duration {
-                            let mut rng = thread_rng();
+                            let mut rng = OsRng;
                             let sample : f64 = rng.gen();
                             if walk.walk_step_count >= walk.walk_max_duration || sample < walk.walk_reset_prob {
                                 true

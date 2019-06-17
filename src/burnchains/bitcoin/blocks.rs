@@ -110,6 +110,7 @@ pub struct BitcoinBlockParser {
     magic_bytes: MagicBytes
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl BitcoinBlockDownloader {
     pub fn new(indexer: BitcoinIndexer) -> BitcoinBlockDownloader {
         BitcoinBlockDownloader {
@@ -136,6 +137,7 @@ impl BitcoinBlockDownloader {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl BurnchainBlockDownloader for BitcoinBlockDownloader {
     type H = BitcoinHeaderIPC;
     type B = BitcoinBlockIPC;
@@ -146,6 +148,7 @@ impl BurnchainBlockDownloader for BitcoinBlockDownloader {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl BitcoinMessageHandler for BitcoinBlockDownloader {
 
     /// Trait message handler 
@@ -419,6 +422,7 @@ impl BitcoinBlockParser {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl BurnchainBlockParser for BitcoinBlockParser {
     type D = BitcoinBlockDownloader;
     type A = BitcoinAddress;

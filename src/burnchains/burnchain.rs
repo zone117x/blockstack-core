@@ -836,7 +836,7 @@ mod tests {
         
     use sha2::Sha512;
 
-    use rand::rngs::OsRng;
+    use rand_os::OsRng;
 
     use util::hash::Hash160;
     use util::hash::to_hex;
@@ -1406,7 +1406,7 @@ mod tests {
         let mut leader_bitcoin_addresses = vec![];
 
         for i in 0..32 {
-            let mut csprng: OsRng = OsRng::new().unwrap();
+            let mut csprng: OsRng = OsRng;
             let keypair: VRFKeypair = VRFKeypair::generate(&mut csprng);
 
             let privkey_hex = to_hex(&keypair.secret.to_bytes());

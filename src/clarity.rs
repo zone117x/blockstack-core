@@ -1,4 +1,5 @@
-use rand::Rng;
+use rand_os::OsRng;
+use rand_os::rand_core::RngCore;
 use std::io;
 use std::io::{Read, Write};
 use std::fs;
@@ -59,7 +60,8 @@ pub fn invoke_command(invoked_by: &str, args: &[String]) {
         },
         "generate_address" => {
             // random 20 bytes
-            let random_bytes = rand::thread_rng().gen::<[u8; 20]>();
+            let mut random_bytes = [0u8; 20];
+            OsRng.fill_bytes(&mut random_bytes);
             // version = 22
             let addr = c32_address(22, &random_bytes).expect("Failed to generate address");
             println!("{}", addr);

@@ -31,7 +31,9 @@ use net::connection::NetworkReplyHandle;
 use net::chat::Conversation;
 use net::chat::NeighborStats;
 
+#[cfg(not(target_arch = "wasm32"))]
 use net::poll::NetworkState;
+#[cfg(not(target_arch = "wasm32"))]
 use net::poll::NetworkPollState;
 
 use net::db::LocalPeer;
@@ -54,8 +56,9 @@ use util::log;
 use util::get_epoch_time_secs;
 
 use rand::prelude::*;
-use rand::thread_rng;
+use rand_os::OsRng;
 
+#[cfg(not(target_arch = "wasm32"))]
 impl PeerNetwork {
     /// Sample a drop probability.
     fn sample_drop_probability(point: f64, drop_prob: &HashMap<NeighborKey, f64>) -> NeighborKey {

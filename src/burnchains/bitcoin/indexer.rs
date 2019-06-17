@@ -284,7 +284,7 @@ impl BitcoinIndexerRuntime {
     }
 }
 
-
+#[cfg(not(target_arch = "wasm32"))]
 impl BitcoinIndexer {
     pub fn from_file(network_id: BitcoinNetworkType, config_file: &String) -> Result<BitcoinIndexer, btc_error> {
         let config = BitcoinIndexerConfig::from_file(config_file)?;
@@ -560,6 +560,7 @@ impl BitcoinIndexer {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl BurnchainIndexer for BitcoinIndexer {
 
     type P = BitcoinBlockParser;

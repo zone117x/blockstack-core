@@ -52,6 +52,7 @@ use util::log;
 /// $s -- BitcoinIndexer.runtime (something with .socket as Arc<Mutex<Option<net::TcpSocket>>>)
 /// $sock -- name of locked socket object in $body
 /// $body -- code to execute with locked $sock
+#[cfg(not(target_arch = "wasm32"))]
 macro_rules! with_socket(($s:ident, $sock:ident, $body:block) => ({
     use ::std::ops::DerefMut;
     let sock_lock = $s.socket_locked();
@@ -72,6 +73,7 @@ macro_rules! with_socket(($s:ident, $sock:ident, $body:block) => ({
     }
 }));
 
+#[cfg(not(target_arch = "wasm32"))]
 impl BitcoinIndexer {
     
     // Based on Andrew Poelstra's rust-bitcoin library.

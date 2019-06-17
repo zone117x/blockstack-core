@@ -58,6 +58,7 @@ pub struct SpvClient {
     pub network_id: BitcoinNetworkType,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl SpvClient {
     pub fn new(headers_path: &str, start_block: u64, end_block: Option<u64>, network_id: BitcoinNetworkType) -> SpvClient {
         SpvClient {
@@ -414,6 +415,7 @@ impl SpvClient {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl BitcoinMessageHandler for SpvClient {
 
     /// Trait message handler 

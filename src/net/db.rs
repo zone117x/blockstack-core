@@ -38,10 +38,7 @@ use util::secp256k1::Secp256k1PrivateKey;
 use util::secp256k1::Secp256k1PublicKey;
 use util::macros::is_big_endian;
 
-use rand::RngCore;
-use rand::Rng;
-use rand::thread_rng;
-use rand::seq::SliceRandom;
+use rand_os::OsRng;
 
 use net::asn::ASEntry4;
 use net::PeerAddress;
@@ -103,9 +100,10 @@ impl fmt::Debug for LocalPeer {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl LocalPeer {
     pub fn new(network_id: u32, key_expire: u64) -> LocalPeer {
-        let mut rng = thread_rng();
+        let mut rng = OsRng;
         let my_private_key = Secp256k1PrivateKey::new();
         let mut my_nonce = [0u8; 32];
 
@@ -320,6 +318,7 @@ pub struct PeerDB {
     pub readwrite: bool,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl PeerDB {
     fn instantiate(&mut self, network_id: u32, key_expires: u64, asn4_entries: &Vec<ASEntry4>, initial_neighbors: &Vec<Neighbor>) -> Result<(), db_error> {
         let localpeer = LocalPeer::new(network_id, key_expires);

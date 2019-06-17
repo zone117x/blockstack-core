@@ -33,10 +33,14 @@ use net::connection::Connection;
 use net::connection::ConnectionOptions;
 use net::connection::NetworkReplyHandle;
 
+#[cfg(not(target_arch = "wasm32"))]
 use net::poll::NetworkState;
+#[cfg(not(target_arch = "wasm32"))]
 use net::poll::NetworkPollState;
 
+#[cfg(not(target_arch = "wasm32"))]
 use net::p2p::PeerNetwork;
+#[cfg(not(target_arch = "wasm32"))]
 use net::p2p::NetworkHandle;
 
 use net::db::*;
@@ -194,6 +198,7 @@ impl fmt::Debug for Conversation {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NeighborKey {
     pub fn from_handshake(peer_version: u32, network_id: u32, handshake_data: &HandshakeData) -> NeighborKey {
         NeighborKey {
@@ -214,6 +219,7 @@ impl NeighborKey {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl Neighbor {
     /// Update fields in this neighbor from a given handshake.
     /// Also, re-calculate the peer's ASN and organization ID

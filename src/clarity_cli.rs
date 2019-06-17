@@ -25,6 +25,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
+extern crate rand_os;
 extern crate rand;
 extern crate ini;
 extern crate secp256k1;
@@ -39,6 +40,9 @@ extern crate ripemd160;
 extern crate dirs;
 extern crate regex;
 extern crate byteorder;
+
+#[cfg(not(target_arch = "wasm32"))]
+extern crate mio;
 
 #[macro_use] extern crate serde_derive;
 

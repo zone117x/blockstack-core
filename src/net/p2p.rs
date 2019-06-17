@@ -33,7 +33,9 @@ use net::connection::NetworkReplyHandle;
 use net::chat::Conversation;
 use net::chat::NeighborStats;
 
+#[cfg(not(target_arch = "wasm32"))]
 use net::poll::NetworkState;
+#[cfg(not(target_arch = "wasm32"))]
 use net::poll::NetworkPollState;
 
 use net::db::LocalPeer;
@@ -74,8 +76,7 @@ use chainstate::burn::db::burndb;
 use util::log;
 use util::get_epoch_time_secs;
 
-use rand::prelude::*;
-use rand::thread_rng;
+use rand_os::OsRng;
 
 #[cfg(not(target_arch = "wasm32"))]
 use mio;
@@ -83,6 +84,7 @@ use mio;
 use mio::net as mio_net;
 
 /// inter-thread request to send a message from another thread in this program.
+#[cfg(not(target_arch = "wasm32"))]
 pub struct NetworkRequest {
     neighbors: Vec<NeighborKey>,
     message: Option<StacksMessage>,
@@ -95,6 +97,7 @@ pub struct NetworkRequest {
 /// The "main loop" for sending/receiving data is a select/poll loop, and runs outside of other
 /// threads that need a synchronous RPC or a multi-RPC interface.  This object gives those threads
 /// a way to issue commands and hear back replies from them.
+#[cfg(not(target_arch = "wasm32"))]
 pub struct NetworkHandle {
     chan_in: SyncSender<NetworkRequest>,
     chan_out: Receiver<Result<Option<NetworkReplyHandle>, net_error>>
@@ -102,11 +105,13 @@ pub struct NetworkHandle {
 
 /// Internal handle for receiving requests from a NetworkHandle.
 /// This is the 'other end' of a NetworkHandle inside the peer network struct.
+#[cfg(not(target_arch = "wasm32"))]
 struct NetworkHandleServer {
     chan_in: Receiver<NetworkRequest>,
     chan_out: SyncSender<Result<Option<NetworkReplyHandle>, net_error>>
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NetworkHandle {
     pub fn new(chan_in: SyncSender<NetworkRequest>, chan_out: Receiver<Result<Option<NetworkReplyHandle>, net_error>>) -> NetworkHandle {
         NetworkHandle {
@@ -207,6 +212,7 @@ impl NetworkHandle {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NetworkHandleServer {
     pub fn new(chan_in: Receiver<NetworkRequest>, chan_out: SyncSender<Result<Option<NetworkReplyHandle>, net_error>>) -> NetworkHandleServer {
         NetworkHandleServer {
@@ -224,11 +230,13 @@ impl NetworkHandleServer {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub struct PeerNetwork {
     pub peerdb: PeerDB,
 
     // ongoing conversations (either they reached out to us, or we to them)
     pub peers: HashMap<usize, Conversation>,
+    #[cfg(not(target_arch = "wasm32"))]
     pub sockets: HashMap<usize, mio_net::TcpStream>,
     pub events: HashMap<NeighborKey, usize>,
 
@@ -257,6 +265,7 @@ pub struct PeerNetwork {
     pub prune_inbound_counts: HashMap<NeighborKey, u64>
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl PeerNetwork {
     pub fn new(peerdb: PeerDB, burnchain: &Burnchain, connection_opts: &ConnectionOptions) -> PeerNetwork {
         PeerNetwork {
@@ -588,6 +597,7 @@ impl PeerNetwork {
     /// Check to see if we can register the given socket
     /// * we can't have registered this neighbor already
     /// * if this is inbound, we can't add more than self.num_clients
+    #[cfg(not(target_arch = "wasm32"))]
     fn can_register(&mut self, local_peer: &LocalPeer, neighbor_key: &NeighborKey, socket: &mio_net::TcpStream, outbound: bool) -> Result<(), net_error> {
         if self.is_registered(&neighbor_key) {
             test_debug!("{:?}: already connected to {:?}", &local_peer, &neighbor_key);
@@ -608,6 +618,7 @@ impl PeerNetwork {
     /// Low-level method to register a socket/event pair.
     /// outbound is true if we are the peer that started the connection (otherwise it's false)
     /// existing_convo is Some(Conversation) if we're re-registering. If given, then outbound will be ignored
+    #[cfg(not(target_arch = "wasm32"))]
     fn register(&mut self, local_peer: &LocalPeer, chain_view: &BurnchainView, event_id: usize, socket: mio_net::TcpStream, outbound: bool, existing_convo: Option<&Conversation>) -> Result<(), net_error> {
         let client_addr = socket.peer_addr()
             .map_err(|e| {
@@ -1083,6 +1094,7 @@ impl PeerNetwork {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     /// Prune inbound and outbound connections if we can 
     fn prune_connections(&mut self, local_peer: &LocalPeer) -> () {
         let mut safe : HashSet<usize> = HashSet::new();

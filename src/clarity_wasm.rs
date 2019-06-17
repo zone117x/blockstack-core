@@ -17,6 +17,8 @@
  along with Blockstack. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#![allow(unused_macros)]
+#![allow(unused_doc_comments)]
 
 #![allow(unused_imports)]
 #![allow(unused_assignments)]
@@ -26,6 +28,42 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
+mod utils { 
+    pub fn set_panic_hook() {
+        // When the `console_error_panic_hook` feature is enabled, we can call the
+        // `set_panic_hook` function at least once during initialization, and then
+        // we will get better error messages if our code ever panics.
+        //
+        // For more details see
+        // https://github.com/rustwasm/console_error_panic_hook#readme
+        #[cfg(feature = "console_error_panic_hook")]
+        console_error_panic_hook::set_once();
+    }
+}
+
+use wasm_bindgen::prelude::*;
+
+// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
+// allocator.
+#[cfg(feature = "wee_alloc")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+
+#[wasm_bindgen]
+extern {
+    fn alert(s: &str);
+}
+
+#[wasm_bindgen]
+pub fn greet() {
+    alert("Hello, clarity-wasm!");
+}
+
+
+
+extern crate wasm_bindgen;
+extern crate rand_os;
 extern crate rand;
 extern crate ini;
 extern crate secp256k1;
@@ -64,40 +102,6 @@ use std::env;
 use std::process;
 
 use util::log;
-
-
-mod utils { 
-    pub fn set_panic_hook() {
-        // When the `console_error_panic_hook` feature is enabled, we can call the
-        // `set_panic_hook` function at least once during initialization, and then
-        // we will get better error messages if our code ever panics.
-        //
-        // For more details see
-        // https://github.com/rustwasm/console_error_panic_hook#readme
-        #[cfg(feature = "console_error_panic_hook")]
-        console_error_panic_hook::set_once();
-    }
-}
-
-use wasm_bindgen::prelude::*;
-
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
-#[cfg(feature = "wee_alloc")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-extern crate wasm_bindgen;
-
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, clarity-wasm!");
-}
 
 
 fn invoke(args: &[String]) {

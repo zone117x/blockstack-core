@@ -36,6 +36,7 @@ pub const NETWORK_ID_TESTNET : u32 = 0xff000000;
 pub const NETWORK_P2P_PORT : u16 = 6265;
 
 /// Synchronize burn transactions from the Bitcoin blockchain 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn sync_burnchain_bitcoin(working_dir: &String, network_name: &String) -> Result<u64, burnchain_error> {
     use burnchains::bitcoin::indexer::BitcoinIndexer;
     use burnchains::bitcoin::indexer::BitcoinIndexerAddress;

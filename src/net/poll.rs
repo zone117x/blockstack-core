@@ -50,13 +50,16 @@ use std::net::Shutdown;
 
 pub const NUM_NEIGHBORS : u32 = 32;
 
+#[cfg(not(target_arch = "wasm32"))]
 const SERVER : Token = mio::Token(0);
 
+#[cfg(not(target_arch = "wasm32"))]
 pub struct NetworkPollState {
     pub new: HashMap<usize, mio_net::TcpStream>,
     pub ready: Vec<usize>
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NetworkPollState {
     pub fn new() -> NetworkPollState {
         NetworkPollState {
@@ -66,6 +69,7 @@ impl NetworkPollState {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub struct NetworkState {
     addr: SocketAddr,
     poll: mio::Poll,
@@ -74,6 +78,7 @@ pub struct NetworkState {
     count: usize,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl NetworkState {
     pub fn bind(addr: &SocketAddr, capacity: usize) -> Result<NetworkState, net_error> {
         let server = mio_net::TcpListener::bind(addr)
