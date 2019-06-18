@@ -8,18 +8,19 @@ repository = "https://github.com/blockstack/blockstack-core"
 description = "Reference implementation of Blockstack Core"
 keywords = [ "bitcoin", "crypto", "blockstack", "decentralized", "dapps", "blockchain" ]
 readme = "README.md"
+autobins = false
 
-# [[bin]]
-# name = "clarity-cli"
-# path = "src/clarity-cli.rs"
+[[bin]]
+name = "clarity-cli"
+path = "src/clarity_cli.rs"
 
 
-[lib]
-name = "clarity"
-test = false
-path = "src/clarity_wasm.rs"
-crate-type = ["cdylib", "rlib", "staticlib"]
-required-features = ["wee_alloc", "console_error_panic_hook", "wasm-bindgen", "stdweb"]
+# [lib]
+# name = "clarity"
+# test = false
+# path = "src/clarity_wasm.rs"
+# crate-type = ["cdylib", "rlib", "staticlib"]
+# required-features = ["wee_alloc", "console_error_panic_hook", "wasm-bindgen", "stdweb"]
 
 
 [features]
@@ -28,9 +29,9 @@ default = ["developer-mode"]
 
 
 [dependencies]
-wasm-bindgen = "0.2.46"
-console_error_panic_hook = { version = "0.1.1", optional = true }
-wee_alloc = { version = "0.4.2", optional = true }
+# wasm-bindgen = "0.2.46"
+# console_error_panic_hook = { version = "0.1.1", optional = true }
+# wee_alloc = { version = "0.4.2", optional = true }
 
 byteorder = "1.1"
 rust-ini = "0.13"
@@ -40,7 +41,7 @@ serde_json = "1.0"
 sha2 = "0.8.0"
 sha3 = "0.8.2"
 ripemd160 = "0.8.0"
-dirs = { version = "2.0.1", optional = true }
+dirs = { version = "2.0.1" }
 regex = "1"
 mio = { version = "0.6.16", optional = true }
 
@@ -51,6 +52,6 @@ rand = { version = "0.7.0-pre.1", features = ["wasm-bindgen"]}
 
 
 secp256k1 = { version = "0.13.0", features = ["serde"] }
-rusqlite = { version = "=0.16.0", features = ["i128_blob", "bundled"] }
+rusqlite = { version = "=0.16.0", features = ["bundled"] }
 ed25519-dalek = { git = 'https://github.com/zone117x/ed25519-dalek', version = "=1.0.0-pre.1", features = ["serde"] }
 curve25519-dalek = { git = 'https://github.com/zone117x/curve25519-dalek', version = "1.2.1",features = ["serde"] }

@@ -215,7 +215,7 @@ pub fn special_get_block_info(args: &[SymbolicExpression],
     match block_info_prop {
         Time => {
             let block_time = env.global_context.get_block_time(height_value);
-            Ok(Value::Int(block_time as i128))
+            Ok(Value::Int(block_time as i64))
         },
         VrfSeed => {
             let vrf_seed = env.global_context.get_block_vrf_seed(height_value);

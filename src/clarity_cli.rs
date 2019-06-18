@@ -17,6 +17,8 @@
  along with Blockstack. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#![allow(unused_doc_comments)]
+#![allow(unused_macros)]
 #![allow(unused_imports)]
 #![allow(unused_assignments)]
 #![allow(unused_variables)]

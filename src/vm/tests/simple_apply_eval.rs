@@ -204,8 +204,8 @@ fn test_simple_arithmetic_functions() {
         Value::Bool(true),
         Value::Bool(true),
         Value::Int(65536),
-        Value::Int(u32::max_value() as i128 + 1),
-        Value::Int(-1 * (u32::max_value() as i128 + 1)),
+        Value::Int(u32::max_value() as i64 + 1),
+        Value::Int(-1 * (u32::max_value() as i64 + 1)),
     ];
 
     tests.iter().zip(expectations.iter())

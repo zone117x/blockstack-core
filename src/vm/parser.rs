@@ -149,7 +149,7 @@ pub fn lex(input: &str) -> Result<Vec<(LexItem, u32)>> {
                     },
                     TokenType::IntLiteral => {
                         let str_value = get_value_or_err(current_slice, captures)?;
-                        let value = match i128::from_str_radix(&str_value, 10) {
+                        let value = match i64::from_str_radix(&str_value, 10) {
                             Ok(parsed) => Ok(Value::Int(parsed)),
                             Err(_e) => Err(Error::new(ErrType::ParseError(format!("Failed to parse int literal '{}'", str_value))))
                         }?;

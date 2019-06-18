@@ -7,7 +7,7 @@ use vm::representations::{SymbolicExpression, SymbolicExpressionType};
 use vm::errors::{Error, ErrType, InterpreterResult as Result, IncomparableError};
 use util::hash;
 
-const MAX_VALUE_SIZE: i128 = 1024 * 1024; // 1MB
+const MAX_VALUE_SIZE: i64 = 1024 * 1024; // 1MB
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TupleTypeSignature {
@@ -77,7 +77,7 @@ pub struct ResponseData {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum Value {
-    Int(i128),
+    Int(i64),
     Bool(bool),
     Buffer(BuffData),
     List(ListData),
@@ -241,7 +241,7 @@ impl Value {
     pub fn buff_from(buff_data: Vec<u8>) -> Result<Value> {
         if buff_data.len() > u32::max_value() as usize {
             Err(Error::new(ErrType::BufferTooLarge))
-        } else if buff_data.len() as i128 > MAX_VALUE_SIZE {
+        } else if buff_data.len() as i64 > MAX_VALUE_SIZE {
             Err(Error::new(ErrType::ValueTooLarge))
         } else {
             Ok(Value::Buffer(BuffData { data: buff_data }))
@@ -256,12 +256,12 @@ impl Value {
         Ok(Value::Tuple(tuple_data))
     }
 
-    pub fn size(&self) -> Result<i128> {
+    pub fn size(&self) -> Result<i64> {
         match self {
             Value::Int(_i) => AtomTypeIdentifier::IntType.size(),
             Value::Bool(_i) => AtomTypeIdentifier::BoolType.size(),
             Value::Principal(_) => AtomTypeIdentifier::PrincipalType.size(),
-            Value::Buffer(ref buff_data) => Ok(buff_data.data.len() as i128),
+            Value::Buffer(ref buff_data) => Ok(buff_data.data.len() as i64),
             Value::Tuple(ref tuple_data) => tuple_data.size(),
             Value::List(ref list_data) => list_data.type_signature.size(),
             Value::Optional(ref opt_data) => opt_data.type_signature().size(),
@@ -367,7 +367,7 @@ impl fmt::Display for PrincipalData {
 }
 
 impl AtomTypeIdentifier {
-    pub fn size(&self) -> Result<i128> {
+    pub fn size(&self) -> Result<i64> {
         match self {
             // AnyType/NoType should _never_ be asked for size. It is only ever used
             //   in type checking native functions.
@@ -376,7 +376,7 @@ impl AtomTypeIdentifier {
             AtomTypeIdentifier::IntType => Ok(16),
             AtomTypeIdentifier::BoolType => Ok(1),
             AtomTypeIdentifier::PrincipalType => Ok(21),
-            AtomTypeIdentifier::BufferType(len) => Ok(*len as i128),
+            AtomTypeIdentifier::BufferType(len) => Ok(*len as i64),
             AtomTypeIdentifier::TupleType(tuple_sig) => tuple_sig.size(),
             AtomTypeIdentifier::OptionalType(t) => {
                 t.size()?
@@ -481,14 +481,14 @@ impl TupleTypeSignature {
         return true
     }
 
-    pub fn size(&self) -> Result<i128> {
-        let mut name_size: i128 = 0;
-        let mut value_size: i128 = 0;
+    pub fn size(&self) -> Result<i64> {
+        let mut name_size: i64 = 0;
+        let mut value_size: i64 = 0;
         for (name, type_signature) in self.type_map.iter() {
             // we only accept ascii names, so 1 char = 1 byte.
-            name_size = name_size.checked_add(name.len() as i128)
+            name_size = name_size.checked_add(name.len() as i64)
                 .ok_or(Error::new(ErrType::ValueTooLarge))?;
-            value_size = value_size.checked_add(type_signature.size()? as i128)
+            value_size = value_size.checked_add(type_signature.size()? as i64)
                 .ok_or(Error::new(ErrType::ValueTooLarge))?;
         }
         let name_total_size = name_size.checked_mul(2)
@@ -546,7 +546,7 @@ impl TupleData {
         
     }
 
-    pub fn size(&self) -> Result<i128> {
+    pub fn size(&self) -> Result<i64> {
         self.type_signature.size()
     }
 }
@@ -645,10 +645,10 @@ impl TypeSignature {
         }
     }
 
-    pub fn new_list(atomic_type: AtomTypeIdentifier, max_len: i128, dimension: i128) -> Result<TypeSignature> {
+    pub fn new_list(atomic_type: AtomTypeIdentifier, max_len: i64, dimension: i64) -> Result<TypeSignature> {
         if dimension == 0 {
             Err(Error::new(ErrType::InvalidTypeDescription))
-        } else if max_len > u32::max_value() as i128 || dimension > u8::max_value() as i128 {
+        } else if max_len > u32::max_value() as i64 || dimension > u8::max_value() as i64 {
             Err(Error::new(ErrType::ListTooLarge))
         } else {
             let list_dimensions = ListTypeData { max_len: max_len as u32,
@@ -719,8 +719,8 @@ impl TypeSignature {
         TypeSignature::new_atom_checked(AtomTypeIdentifier::TupleType(tuple_type_sig))
     }
 
-    fn new_buffer(buff_len: i128) -> Result<TypeSignature> {
-        if buff_len > u32::max_value() as i128 {
+    fn new_buffer(buff_len: i64) -> Result<TypeSignature> {
+        if buff_len > u32::max_value() as i64 {
             Err(Error::new(ErrType::BufferTooLarge))
         } else {
             let atom_type = AtomTypeIdentifier::BufferType(buff_len as u32);
@@ -737,13 +737,13 @@ impl TypeSignature {
                                            dimension: 1 })
     }
 
-    pub fn size(&self) -> Result<i128> {
+    pub fn size(&self) -> Result<i64> {
         match self {
             TypeSignature::List(ref atomic_type, ref list_data) => {
                 if list_data.max_len <= 0 {
-                    Ok(32 as i128)
+                    Ok(32 as i64)
                 } else {
-                    let multiplier = (list_data.max_len as i128).checked_mul(list_data.dimension as i128)
+                    let multiplier = (list_data.max_len as i64).checked_mul(list_data.dimension as i64)
                         .ok_or(Error::new(ErrType::ValueTooLarge))?;
                     multiplier.checked_mul(atomic_type.size()?)
                         .ok_or(Error::new(ErrType::ValueTooLarge))
@@ -848,7 +848,7 @@ impl TypeSignature {
             };
 
             TypeSignature::new_list(atomic_type,
-                                    parent_max_len as i128, parent_dimension as i128)
+                                    parent_max_len as i64, parent_dimension as i64)
         } else {
             Ok(TypeSignature::get_empty_list_type())
         }

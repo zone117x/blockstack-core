@@ -1,7 +1,7 @@
 use vm::types::Value;
 use vm::errors::{Error, ErrType, InterpreterResult as Result};
 
-fn type_force_integer(value: &Value) -> Result<i128> {
+fn type_force_integer(value: &Value) -> Result<i64> {
     match *value {
         Value::Int(int) => Ok(int),
         _ => Err(Error::new(ErrType::TypeError("IntType".to_string(), value.clone())))
@@ -9,7 +9,7 @@ fn type_force_integer(value: &Value) -> Result<i128> {
 }
 
 fn binary_comparison<F>(args: &[Value], function: &F) -> Result<Value>
-where F: Fn(i128, i128) -> bool {
+where F: Fn(i64, i64) -> bool {
     if args.len() == 2 {
         let arg1 = type_force_integer(&args[0])?;
         let arg2 = type_force_integer(&args[1])?;
@@ -45,7 +45,7 @@ pub fn native_le(args: &[Value]) -> Result<Value> {
 pub fn native_add(args: &[Value]) -> Result<Value> {
     let typed_args: Result<Vec<_>> = args.iter().map(|x| type_force_integer(x)).collect();
     let parsed_args = typed_args?;
-    let checked_result = parsed_args.iter().fold(Some(0), |acc: Option<i128>, x| {
+    let checked_result = parsed_args.iter().fold(Some(0), |acc: Option<i64>, x| {
         match acc {
             Some(value) => value.checked_add(*x),
             None => None
@@ -83,7 +83,7 @@ pub fn native_sub(args: &[Value]) -> Result<Value> {
 pub fn native_mul(args: &[Value]) -> Result<Value> {
     let typed_args: Result<Vec<_>> = args.iter().map(|x| type_force_integer(x)).collect();
     let parsed_args = typed_args?;
-    let checked_result = parsed_args.iter().fold(Some(1), |acc: Option<i128>, x| {
+    let checked_result = parsed_args.iter().fold(Some(1), |acc: Option<i64>, x| {
         match acc {
             Some(value) => value.checked_mul(*x),
             None => None
@@ -116,8 +116,8 @@ pub fn native_div(args: &[Value]) -> Result<Value> {
 
 // AARON: Note -- this was pulled straight for rustlang's nightly @ 1.34
 //             -- this _should be_ deleted once 1.34 ships.
-fn checked_pow(mut base: i128, mut exp: u32) -> Option<i128> {
-    let mut acc: i128 = 1;
+fn checked_pow(mut base: i64, mut exp: u32) -> Option<i64> {
+    let mut acc: i64 = 1;
     
     while exp > 1 {
         if (exp & 1) == 1 {
@@ -141,7 +141,7 @@ pub fn native_pow(args: &[Value]) -> Result<Value> {
     if args.len() == 2 {
         let base = type_force_integer(&args[0])?;
         let power_i128 = type_force_integer(&args[1])?;
-        if power_i128 < 0 || power_i128 > (u32::max_value() as i128) {
+        if power_i128 < 0 || power_i128 > (u32::max_value() as i64) {
             return Err(Error::new(ErrType::Arithmetic("Power argument to (pow ...) must be a u32 integer".to_string())))
         }
 

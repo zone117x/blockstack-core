@@ -82,7 +82,7 @@ fn test_get_block_info_eval(){
     ];
 
     let expected = [
-        Ok(Value::Int(env.global_context.get_block_time(1) as i128)),
+        Ok(Value::Int(env.global_context.get_block_time(1) as i64)),
         Err(true),
         Err(true),
         Err(true),
@@ -118,7 +118,7 @@ fn is_committed(v: &Value) -> bool {
     }
 }
 
-fn is_err_code(v: &Value, e: i128) -> bool {
+fn is_err_code(v: &Value, e: i64) -> bool {
     match v {
         Value::Response(ref data) => {
             !data.committed &&

@@ -9,11 +9,13 @@ cd "$(dirname "$(dirname "$0")")"
 apt-get update
 apt-get install -y cmake git clang
 
-install_deps () {
-
+install_nodejs () {
     curl -sL https://deb.nodesource.com/setup_12.x | bash -
+    apt-get update
     apt-get install -y nodejs
+}
 
+install_deps () {
     apt-get update
     apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -31,13 +33,19 @@ install_deps () {
 }
 
 install_emsdk_regular () {
-    git clone https://github.com/emscripten-core/emsdk.git
+    # git clone https://github.com/emscripten-core/emsdk.git
     cd emsdk
     git pull
+
     # ./emsdk install sdk-incoming-64bit
-    ./emsdk install latest
     # ./emsdk activate sdk-incoming-64bit
-    ./emsdk activate latest
+
+    # ./emsdk install latest
+    # ./emsdk activate latest
+
+    ./emsdk install latest-upstream
+    ./emsdk activate latest-upstream
+
     source ./emsdk_env.sh
     cd ..
 }
@@ -53,12 +61,16 @@ install_emsdk_portable () {
     tar -xz
     cd emsdk-portable
     ./emsdk update
-    ./emsdk install sdk-1.38.15-64bit
-    ./emsdk activate sdk-1.38.15-64bit
+    ./emsdk install sdk-1.38.31-64bit
+    ./emsdk activate sdk-1.38.31-64bit
     source ./emsdk_env.sh
+    cd ..
 }
 
-install_emsdk_portable
+# install_emsdk_portable
+
+install_nodejs
+install_emsdk_regular
 
 export CC=emcc
 export CXX=emcc
