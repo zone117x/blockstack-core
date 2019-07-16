@@ -1,1 +1,7 @@
 default-target = "wasm32-unknown-emscripten"
+
+
+[target.emscripten]
+# link-args = ["-O0", "-oclarity.html"]
+link-args = ["--js-opts", "0", "-s", "ASSERTIONS=1", "--profiling", "-s", "EXTRA_EXPORTED_RUNTIME_METHODS=['cwrap','addOnInit','ccall','FS']"]
+prepend-js = "static/emscripten_runtime.js"

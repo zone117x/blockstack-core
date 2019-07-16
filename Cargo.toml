@@ -14,6 +14,10 @@ autobins = false
 name = "clarity-cli"
 path = "src/clarity_cli.rs"
 
+[[bin]]
+name = "clarity-wasm"
+path = "src/clarity_wasm.rs"
+
 
 # [lib]
 # name = "clarity"
@@ -32,6 +36,7 @@ default = ["developer-mode"]
 # wasm-bindgen = "0.2.46"
 # console_error_panic_hook = { version = "0.1.1", optional = true }
 # wee_alloc = { version = "0.4.2", optional = true }
+stdweb = "0.4.17"
 
 byteorder = "1.1"
 rust-ini = "0.13"
